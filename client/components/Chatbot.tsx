@@ -85,7 +85,7 @@ export default function Chatbot() {
 
   const fetchAIConfig = async () => {
     try {
-      const response = await fetch("/api/admin/ai-config");
+      const response = await fetch("/api/ai-config");
       if (response.ok) {
         const data = await response.json();
         setSystemPrompt(data.config.systemPrompt);

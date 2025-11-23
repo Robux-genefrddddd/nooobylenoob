@@ -20,6 +20,8 @@ import {
   handleGetAIConfig,
   handleUpdateAIConfig,
   handleGetUsers,
+  handleGetMessageHistory,
+  handleDeleteUserData,
   getAIConfig_,
 } from "./routes/admin";
 

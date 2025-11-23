@@ -13,8 +13,8 @@ import {
   calculateExpiryDate,
   formatLicenseKey,
 } from "../lib/licenseUtils";
+import { verifyAdminToken } from "../lib/adminAuth";
 
-// In-memory storage for generated licenses and AI config
 const generatedLicenses: Map<string, GeneratedLicense> = new Map();
 let aiConfig: AIConfig = {
   model: "x-ai/grok-4.1-fast",
@@ -24,14 +24,14 @@ let aiConfig: AIConfig = {
   maxTokens: 1024,
 };
 
-function verifyAdmin(req: any): boolean {
-  const adminAuth = req.headers["x-admin-auth"];
-  return adminAuth === "true";
+async function verifyAdmin(req: any): Promise<boolean> {
+  const result = await verifyAdminToken(req);
+  return result.isAdmin;
 }
 
 export const handleCreateLicense: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -63,7 +63,7 @@ export const handleCreateLicense: RequestHandler = async (req, res) => {
 
 export const handleUserAction: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -95,7 +95,7 @@ export const handleUserAction: RequestHandler = async (req, res) => {
 
 export const handleMaintenanceMode: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -114,7 +114,7 @@ export const handleMaintenanceMode: RequestHandler = async (req, res) => {
 
 export const handleGetStats: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -131,7 +131,7 @@ export const handleGetStats: RequestHandler = async (req, res) => {
 
 export const handleCreateLicenseNoEmail: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -182,7 +182,7 @@ export const handleCreateLicenseNoEmail: RequestHandler = async (req, res) => {
 
 export const handleGetGeneratedLicenses: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -200,7 +200,7 @@ export const handleGetGeneratedLicenses: RequestHandler = async (req, res) => {
 
 export const handleGetAIConfig: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -216,7 +216,7 @@ export const handleGetAIConfig: RequestHandler = async (req, res) => {
 
 export const handleUpdateAIConfig: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -247,7 +247,7 @@ export const handleUpdateAIConfig: RequestHandler = async (req, res) => {
 
 export const handleGetUsers: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -262,6 +262,115 @@ export const handleGetUsers: RequestHandler = async (req, res) => {
   } catch (error) {
     console.error("Get users error:", error);
     return res.status(500).json({ error: "Failed to retrieve users" });
+  }
+};
+
+export const handleGetMessageHistory: RequestHandler = async (req, res) => {
+  try {
+    if (!(await verifyAdmin(req))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const { userId } = req.query as { userId?: string };
+
+    if (!userId) {
+      return res.status(400).json({
+        error: "User ID is required",
+      });
+    }
+
+    try {
+      const { getAdminDb } = await import("../lib/firebase-admin");
+      const adminDb = await getAdminDb();
+      if (!adminDb) {
+        return res.json({
+          success: true,
+          messages: [],
+          total: 0,
+        });
+      }
+
+      const messagesSnapshot = await adminDb
+        .collection("private_messages")
+        .doc(userId)
+        .collection("history")
+        .orderBy("timestamp", "desc")
+        .limit(100)
+        .get();
+
+      const messages = messagesSnapshot.docs
+        .map((doc) => doc.data())
+        .filter((msg: any) => !msg.deleted);
+
+      return res.json({
+        success: true,
+        messages,
+        total: messages.length,
+      });
+    } catch (err) {
+      console.error("Error fetching message history:", err);
+      return res.json({
+        success: true,
+        messages: [],
+        total: 0,
+      });
+    }
+  } catch (error) {
+    console.error("Message history error:", error);
+    return res
+      .status(500)
+      .json({ error: "Failed to retrieve message history" });
+  }
+};
+
+export const handleDeleteUserData: RequestHandler = async (req, res) => {
+  try {
+    if (!(await verifyAdmin(req))) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const { userId } = req.body as { userId: string };
+
+    if (!userId) {
+      return res.status(400).json({
+        error: "User ID is required",
+      });
+    }
+
+    try {
+      const { getAdminDb } = await import("../lib/firebase-admin");
+      const adminDb = await getAdminDb();
+      if (!adminDb) {
+        return res.json({
+          success: true,
+          message: "User data deletion completed",
+        });
+      }
+
+      const messagesSnapshot = await adminDb
+        .collection("private_messages")
+        .doc(userId)
+        .collection("history")
+        .get();
+
+      for (const doc of messagesSnapshot.docs) {
+        await doc.ref.delete();
+      }
+
+      return res.json({
+        success: true,
+        message: "User data deleted successfully",
+      });
+    } catch (err) {
+      console.error("Error deleting user data:", err);
+      return res.json({
+        success: true,
+        message: "User data deletion completed",
+      });
+    }
+  } catch (error) {
+    console.error("Delete user data error:", error);
+    return res.status(500).json({ error: "Failed to delete user data" });
   }
 };
 

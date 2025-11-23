@@ -12,7 +12,7 @@ interface BanWarning {
 }
 
 export default function BanWarningModal() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [warning, setWarning] = useState<BanWarning | null>(null);
   const [acknowledged, setAcknowledged] = useState(false);
 
@@ -47,17 +47,52 @@ export default function BanWarningModal() {
     setWarning(null);
   }, [user]);
 
+  useEffect(() => {
+    if (!warning) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" || e.key === "Enter") {
+        e.preventDefault();
+      }
+    };
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (warning.type === "ban") {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown, true);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [warning]);
+
   if (!warning) {
     return null;
   }
 
   // This modal cannot be closed without acknowledging
-  const handleAcknowledge = () => {
+  const handleAcknowledge = async () => {
     setAcknowledged(true);
     if (warning.type === "ban") {
-      // Logout if banned
-      window.location.href = "/login";
+      try {
+        await logout();
+      } catch (err) {
+        console.error("Error logging out:", err);
+      } finally {
+        window.location.href = "/login";
+      }
     }
+  };
+
+  const handleClickOutside = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const iconColor =
@@ -83,15 +118,24 @@ export default function BanWarningModal() {
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}
+      className="fixed inset-0 bg-black flex items-center justify-center p-4"
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.95)",
+        zIndex: 9999,
+        pointerEvents: "auto",
+      }}
+      onClick={handleClickOutside}
+      onContextMenu={handleClickOutside}
     >
       <div
         className="w-full max-w-md rounded-lg p-8 border"
         style={{
           backgroundColor: "#0A0A0A",
           borderColor: "#1A1A1A",
+          zIndex: 10000,
+          pointerEvents: "auto",
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Icon and Title */}
         <div className="flex flex-col items-center gap-4 mb-6">

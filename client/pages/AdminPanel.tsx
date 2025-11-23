@@ -35,7 +35,12 @@ export default function AdminPanel() {
   });
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "licenses" | "users" | "ai-config" | "maintenance"
+    | "overview"
+    | "licenses"
+    | "users"
+    | "ai-config"
+    | "maintenance"
+    | "message-history"
   >("overview");
 
   // License states
@@ -71,9 +76,15 @@ export default function AdminPanel() {
     "La plateforme est actuellement en maintenance. Veuillez réessayer plus tard.",
   );
 
+  // Message history states
+  const [messageHistory, setMessageHistory] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
   useEffect(() => {
     const adminAuth = sessionStorage.getItem("admin_authenticated");
-    if (adminAuth !== "true") {
+    const token = sessionStorage.getItem("admin_token");
+    if (adminAuth !== "true" || !token) {
       navigate("/admin-login");
       return;
     }
@@ -84,7 +95,8 @@ export default function AdminPanel() {
   }, [navigate]);
 
   const adminAuth = sessionStorage.getItem("admin_authenticated");
-  if (adminAuth !== "true") {
+  const token = sessionStorage.getItem("admin_token");
+  if (adminAuth !== "true" || !token) {
     return null;
   }
 
@@ -112,6 +124,26 @@ export default function AdminPanel() {
       setUsers(data.users || []);
     } catch (err) {
       console.error("Failed to fetch users:", err);
+    }
+  };
+
+  const fetchMessageHistory = async (userId: string) => {
+    if (!userId) {
+      setMessageHistory([]);
+      return;
+    }
+
+    setLoadingMessages(true);
+    try {
+      const data = await adminFetchJSON<any>(
+        `/api/admin/message-history?userId=${encodeURIComponent(userId)}`,
+      );
+      setMessageHistory(data.messages || []);
+    } catch (err) {
+      console.error("Failed to fetch message history:", err);
+      setMessageHistory([]);
+    } finally {
+      setLoadingMessages(false);
     }
   };
 
@@ -264,7 +296,14 @@ export default function AdminPanel() {
         style={{ backgroundColor: "#0D0D0D", borderColor: "#1A1A1A" }}
       >
         {(
-          ["overview", "licenses", "users", "ai-config", "maintenance"] as const
+          [
+            "overview",
+            "licenses",
+            "users",
+            "ai-config",
+            "maintenance",
+            "message-history",
+          ] as const
         ).map((tab) => (
           <button
             key={tab}
@@ -280,6 +319,7 @@ export default function AdminPanel() {
             {tab === "users" && "Utilisateurs"}
             {tab === "ai-config" && "Config IA"}
             {tab === "maintenance" && "Maintenance"}
+            {tab === "message-history" && "Historique Messages"}
           </button>
         ))}
       </div>
@@ -947,6 +987,129 @@ export default function AdminPanel() {
                 💡 Conseil: Utilisez CTRL+F1 n'importe où dans l'application
                 pour basculer rapidement le mode maintenance.
               </p>
+            </div>
+          )}
+
+          {/* Message History Tab */}
+          {activeTab === "message-history" && (
+            <div>
+              <h2
+                className="text-2xl font-bold mb-8"
+                style={{ color: "#FFFFFF" }}
+              >
+                Historique des Messages
+              </h2>
+
+              <div
+                className="rounded-lg p-6 border mb-8"
+                style={{
+                  backgroundColor: "#0D0D0D",
+                  borderColor: "#1A1A1A",
+                }}
+              >
+                <h3
+                  className="text-xl font-semibold mb-4"
+                  style={{ color: "#FFFFFF" }}
+                >
+                  Sélectionner un utilisateur
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "#FFFFFF" }}
+                    >
+                      ID Utilisateur
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedUserId}
+                      onChange={(e) => {
+                        setSelectedUserId(e.target.value);
+                        if (e.target.value) {
+                          fetchMessageHistory(e.target.value);
+                        } else {
+                          setMessageHistory([]);
+                        }
+                      }}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white"
+                      placeholder="Enter user ID..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {selectedUserId && (
+                <div
+                  className="rounded-lg p-6 border"
+                  style={{
+                    backgroundColor: "#0D0D0D",
+                    borderColor: "#1A1A1A",
+                  }}
+                >
+                  <h3
+                    className="text-xl font-semibold mb-4"
+                    style={{ color: "#FFFFFF" }}
+                  >
+                    Messages ({messageHistory.length})
+                  </h3>
+
+                  {loadingMessages ? (
+                    <p style={{ color: "#888888" }}>Chargement...</p>
+                  ) : messageHistory.length === 0 ? (
+                    <p style={{ color: "#888888" }}>
+                      Aucun message trouvé pour cet utilisateur
+                    </p>
+                  ) : (
+                    <div className="space-y-4 max-h-96 overflow-y-auto">
+                      {messageHistory.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className="p-4 bg-slate-900 rounded border border-slate-700"
+                        >
+                          <p
+                            className="text-xs mb-2"
+                            style={{ color: "#888888" }}
+                          >
+                            {new Date(msg.timestamp).toLocaleString()}
+                          </p>
+                          <div className="space-y-2">
+                            <div>
+                              <p
+                                className="text-xs font-semibold mb-1"
+                                style={{ color: "#0A84FF" }}
+                              >
+                                Utilisateur:
+                              </p>
+                              <p
+                                className="text-sm p-2 bg-black rounded"
+                                style={{ color: "#FFFFFF" }}
+                              >
+                                {msg.message}
+                              </p>
+                            </div>
+                            <div>
+                              <p
+                                className="text-xs font-semibold mb-1"
+                                style={{ color: "#888888" }}
+                              >
+                                Assistant:
+                              </p>
+                              <p
+                                className="text-sm p-2 bg-black rounded"
+                                style={{ color: "#CCCCCC" }}
+                              >
+                                {msg.response}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

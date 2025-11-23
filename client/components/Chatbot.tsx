@@ -8,6 +8,7 @@ import CodeBlock from "./CodeBlock";
 import LicenseDialog from "./LicenseDialog";
 import { parseCodeBlocks } from "@/lib/codeDisplay";
 import { useAuth } from "@/hooks/useAuth";
+import { PrivateMessageHistory } from "@/lib/privateMessageHistory";
 
 interface Message {
   id: string;
@@ -224,6 +225,19 @@ export default function Chatbot() {
             : conv,
         ),
       );
+
+      if (user) {
+        try {
+          await PrivateMessageHistory.savePrivateMessage(
+            user.id,
+            user.email,
+            input,
+            data.content,
+          );
+        } catch (err) {
+          console.error("Failed to save private message:", err);
+        }
+      }
 
       await incrementMessageCount();
     } catch (error) {

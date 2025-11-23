@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, AlertCircle } from "lucide-react";
-
-const ADMIN_USERNAME = "Admin";
-const ADMIN_PASSWORD = "Antoine80@";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -17,18 +16,26 @@ export default function AdminLogin() {
     setError("");
     setIsLoading(true);
 
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      try {
-        sessionStorage.setItem("admin_authenticated", "true");
-        navigate("/admin-panel");
-      } catch (err) {
-        setError("Navigation failed");
-      }
-    } else {
-      setError("Invalid username or password");
-    }
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+      const token = await userCredential.user.getIdToken();
 
-    setIsLoading(false);
+      sessionStorage.setItem("admin_token", token);
+      sessionStorage.setItem("admin_authenticated", "true");
+      navigate("/admin-panel");
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : "Login failed. Please check your credentials.";
+      setError(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -77,23 +84,23 @@ export default function AdminLogin() {
             </div>
           )}
 
-          {/* Username */}
+          {/* Email */}
           <div>
             <label
               className="block text-sm font-medium mb-2"
               style={{ color: "#FFFFFF" }}
             >
-              Username
+              Email
             </label>
             <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@example.com"
               className="w-full px-4 py-3 rounded-lg border focus:outline-none transition-all"
               style={{
                 backgroundColor: "#1A1A1A",
-                borderColor: username ? "#0A84FF" : "#2A2A2A",
+                borderColor: email ? "#0A84FF" : "#2A2A2A",
                 color: "#FFFFFF",
               }}
             />
@@ -124,15 +131,13 @@ export default function AdminLogin() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isLoading || !username || !password}
+            disabled={isLoading || !email || !password}
             className="w-full py-3 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50"
             style={{
-              backgroundColor: username && password ? "#0A84FF" : "#2A2A2A",
+              backgroundColor: email && password ? "#0A84FF" : "#2A2A2A",
               color: "#FFFFFF",
               boxShadow:
-                username && password
-                  ? "0 0 20px rgba(10, 132, 255, 0.4)"
-                  : "none",
+                email && password ? "0 0 20px rgba(10, 132, 255, 0.4)" : "none",
             }}
           >
             {isLoading ? "Authenticating..." : "Sign In"}

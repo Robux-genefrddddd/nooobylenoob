@@ -2,14 +2,15 @@ export async function adminFetch(
   url: string,
   options?: RequestInit,
 ): Promise<Response> {
-  const headers = {
+  const token = sessionStorage.getItem("admin_token");
+  const headers: any = {
     "Content-Type": "application/json",
     ...options?.headers,
-    "X-Admin-Auth":
-      sessionStorage.getItem("admin_authenticated") === "true"
-        ? "true"
-        : "false",
   };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
   return fetch(url, {
     ...options,

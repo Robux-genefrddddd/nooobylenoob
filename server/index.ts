@@ -20,6 +20,8 @@ import {
   handleGetAIConfig,
   handleUpdateAIConfig,
   handleGetUsers,
+  handleGetMessageHistory,
+  handleDeleteUserData,
   getAIConfig_,
 } from "./routes/admin";
 
@@ -53,7 +55,7 @@ export function createServer() {
   app.post("/api/license/activate", handleLicenseActivate);
   app.post("/api/license/increment", handleIncrementMessageCount);
 
-  // Admin routes (need auth header)
+  // Admin routes (need Firebase auth token)
   app.post("/api/admin/license/create", handleCreateLicense);
   app.post("/api/admin/license/create-no-email", handleCreateLicenseNoEmail);
   app.get("/api/admin/licenses", handleGetGeneratedLicenses);
@@ -63,6 +65,8 @@ export function createServer() {
   app.get("/api/admin/stats", handleGetStats);
   app.get("/api/admin/ai-config", handleGetAIConfig);
   app.post("/api/admin/ai-config", handleUpdateAIConfig);
+  app.get("/api/admin/message-history", handleGetMessageHistory);
+  app.post("/api/admin/delete-user-data", handleDeleteUserData);
 
   // Public routes (no auth needed)
   app.get("/api/ai-config", (req, res) => {

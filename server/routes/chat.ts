@@ -26,11 +26,9 @@ export const handleChat: RequestHandler = async (req, res) => {
         .json({ error: "OpenRouter API key not configured" });
     }
 
-    // Get AI config from admin settings
     const aiConfig = getAIConfig_();
     const SYSTEM_PROMPT = aiConfig.systemPrompt;
 
-    // Inject system prompt if not already present
     const finalMessages: ChatMessage[] =
       messages[0]?.role === "system"
         ? messages
@@ -62,17 +60,19 @@ export const handleChat: RequestHandler = async (req, res) => {
       try {
         errorData = JSON.parse(responseText);
       } catch {
-        console.error("OpenRouter API error:", responseText);
+        console.error(
+          "OpenRouter API error - request failed (no message content logged)",
+        );
         return res.status(response.status).json({
           error: `OpenRouter API error: ${response.statusText}`,
-          details: responseText,
         });
       }
-      console.error("OpenRouter API error:", errorData);
+      console.error(
+        "OpenRouter API error - request failed (no message content logged)",
+      );
       return res.status(response.status).json({
         error:
           errorData.error || `OpenRouter API error: ${response.statusText}`,
-        details: errorData,
       });
     }
 
@@ -80,7 +80,9 @@ export const handleChat: RequestHandler = async (req, res) => {
     try {
       data = JSON.parse(responseText);
     } catch (parseError) {
-      console.error("Failed to parse OpenRouter API response:", parseError);
+      console.error(
+        "Failed to parse OpenRouter API response (no content logged)",
+      );
       return res.status(500).json({
         error: "Failed to parse OpenRouter API response",
       });
@@ -94,10 +96,9 @@ export const handleChat: RequestHandler = async (req, res) => {
 
     res.json({ content });
   } catch (error) {
-    console.error("Chat API error:", error);
+    console.error("Chat API error (no message content logged)");
     res.status(500).json({
       error: "Failed to process chat request",
-      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };

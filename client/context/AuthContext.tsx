@@ -14,8 +14,11 @@ import {
 import { auth, db } from "@/lib/firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { checkSecurityBeforeAuth } from "@/lib/securityCheck";
+import { LicenseManager } from "@/lib/licenseManager";
+import { LicenseVerificationResponse, Warning, SecurityAlert } from "@shared/api";
+import { getDeviceFingerprint } from "@/lib/deviceFingerprint";
 
-export type Plan = "Gratuit" | "Plus" | "Entreprise";
+export type Plan = "Gratuit" | "Classic" | "Pro";
 
 export interface User {
   id: string;
@@ -23,7 +26,11 @@ export interface User {
   email: string;
   plan: Plan;
   messageCount?: number;
+  messageLimit?: number;
   licenseKey?: string;
+  expiresAt?: string;
+  isBanned?: boolean;
+  isSuspended?: boolean;
 }
 
 interface AuthContextType {

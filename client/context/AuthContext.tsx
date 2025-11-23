@@ -35,6 +35,8 @@ export interface User {
   expiresAt?: string;
   isBanned?: boolean;
   isSuspended?: boolean;
+  avatar?: string;
+  avatarType?: "emoji" | "image" | "url";
 }
 
 interface AuthContextType {

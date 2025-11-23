@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@hcaptcha/react-hcaptcha':
+        specifier: ^1.11.0
+        version: 1.14.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       dotenv:
         specifier: ^17.2.1
         version: 17.2.1
@@ -26,9 +29,6 @@ importers:
       highlight.js:
         specifier: ^11.11.1
         version: 11.11.1
-      react-turnstile:
-        specifier: ^1.1.4
-        version: 1.1.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -687,6 +687,15 @@ packages:
     resolution: {integrity: sha512-rc1hOQtjIWGxcxpb9aHAfLpIctjEnsDehj0DAiVfBlmT84uvR0uUtN2hEi/ecvWVjXUGf5qPF4qEgiLOx1YIMQ==}
     engines: {node: '>=6'}
     hasBin: true
+
+  '@hcaptcha/loader@2.2.0':
+    resolution: {integrity: sha512-LAd0XRt1Mu0hLpUpWAx5OS9FS0d6V+V0aCSYUKFAz0a6tTDHeAuwm5iO81mp2HIEhXFOSSB8AwCCOU9zq695lg==}
+
+  '@hcaptcha/react-hcaptcha@1.14.0':
+    resolution: {integrity: sha512-XHFhmRjw4L6spgRfTEUj/uW4cN4iWTp7BxLHyheF5zEle6g65fIHUCmqKMrIA/6OKLzBSElUKyc1IuDU+V8RaQ==}
+    peerDependencies:
+      react: '>= 16.3.0'
+      react-dom: '>= 16.3.0'
 
   '@hookform/resolvers@5.2.1':
     resolution: {integrity: sha512-u0+6X58gkjMcxur1wRWokA7XsiiBJ6aK17aPZxhkoYiK5J+HcTx0Vhu9ovXe6H+dVpO6cjrn2FkJTryXEMlryQ==}
@@ -3019,12 +3028,6 @@ packages:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
 
-  react-turnstile@1.1.4:
-    resolution: {integrity: sha512-oluyRWADdsufCt5eMqacW4gfw8/csr6Tk+fmuaMx0PWMKP1SX1iCviLvD2D5w92eAzIYDHi/krUWGHhlfzxTpQ==}
-    peerDependencies:
-      react: '>= 16.13.1'
-      react-dom: '>= 16.13.1'
-
   react-use-measure@2.1.7:
     resolution: {integrity: sha512-KrvcAo13I/60HpwGO5jpW7E9DfusKyLPLvuHlUyP5zqnmAPhNc6qTRjUQrdTADl0lpPpDVU2/Gg51UlOGHXbdg==}
     peerDependencies:
@@ -4108,6 +4111,15 @@ snapshots:
       protobufjs: 7.5.4
       yargs: 17.7.2
     optional: true
+
+  '@hcaptcha/loader@2.2.0': {}
+
+  '@hcaptcha/react-hcaptcha@1.14.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@babel/runtime': 7.28.2
+      '@hcaptcha/loader': 2.2.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@hookform/resolvers@5.2.1(react-hook-form@7.62.0(react@18.3.1))':
     dependencies:
@@ -6549,11 +6561,6 @@ snapshots:
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-
-  react-turnstile@1.1.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 

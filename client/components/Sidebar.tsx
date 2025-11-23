@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, LogOut, Trash2, Clock, UserCircle } from "lucide-react";
+import { Plus, LogOut, Trash2, Clock, UserCircle, Edit2, Check, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -15,6 +15,7 @@ interface SidebarProps {
   onSelectConversation: (id: string) => void;
   onNewConversation: () => void;
   onDeleteConversation: (id: string) => void;
+  onRenameConversation: (id: string, newTitle: string) => void;
 }
 
 export default function Sidebar({
@@ -23,9 +24,12 @@ export default function Sidebar({
   onSelectConversation,
   onNewConversation,
   onDeleteConversation,
+  onRenameConversation,
 }: SidebarProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
 
   const handleLogout = async () => {
     try {

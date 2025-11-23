@@ -23,6 +23,23 @@ interface Conversation {
   messages: Message[];
 }
 
+// 👉 Tu peux modifier ce texte : c’est ton prompt système
+const SYSTEM_PROMPT = `
+Tu es un assistant IA expert en développement web (JavaScript, TypeScript, React, Node.js)
+et en intégration de systèmes comme hCaptcha, Cloudflare Turnstile et autres protections.
+
+Ta mission :
+- analyser le code et les messages d'erreur que l'utilisateur t'envoie,
+- expliquer clairement d'où vient le problème,
+- proposer des corrections de code complètes et prêtes à l'emploi,
+- donner des étapes simples à suivre.
+
+Règles :
+- Tu réponds toujours en français simple.
+- Tu expliques étape par étape.
+- Quand tu donnes du code, utilise des blocs Markdown (\`\`\`).
+`;
+
 export default function Chatbot() {
   const navigate = useNavigate();
   const { user, canSendMessage, incrementMessageCount } = useAuth();
@@ -145,13 +162,23 @@ export default function Chatbot() {
     setIsLoading(true);
 
     try {
-      const messagesForAPI = activeConversation.messages
+      // 🔹 On prépare l'historique comme avant
+      const historyMessages = activeConversation.messages
         .concat(userMessage)
         .map((msg) => ({
           role:
             msg.sender === "user" ? ("user" as const) : ("assistant" as const),
           content: msg.content,
         }));
+
+      // 🔹 On ajoute le system prompt au début
+      const messagesForAPI = [
+        {
+          role: "system" as const,
+          content: SYSTEM_PROMPT,
+        },
+        ...historyMessages,
+      ];
 
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -202,7 +229,9 @@ export default function Chatbot() {
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: `Error: ${error instanceof Error ? error.message : "Failed to get response"}`,
+        content: `Error: ${
+          error instanceof Error ? error.message : "Failed to get response"
+        }`,
         sender: "assistant",
         timestamp: new Date(),
       };

@@ -106,7 +106,7 @@ export default function Chatbot() {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !activeConversation) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -115,7 +115,13 @@ export default function Chatbot() {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.id === activeConversationId
+          ? { ...conv, messages: [...conv.messages, userMessage] }
+          : conv
+      )
+    );
     setInput("");
     setIsLoading(true);
 
@@ -127,9 +133,46 @@ export default function Chatbot() {
         sender: "assistant",
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, assistantMessage]);
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === activeConversationId
+            ? { ...conv, messages: [...conv.messages, assistantMessage] }
+            : conv
+        )
+      );
       setIsLoading(false);
     }, 800);
+  };
+
+  const handleNewConversation = () => {
+    const newId = Date.now().toString();
+    const newConversation: Conversation = {
+      id: newId,
+      title: "New Conversation",
+      timestamp: new Date(),
+      messages: [
+        {
+          id: "1",
+          content: "Hello! I'm your AI assistant. How can I help you today?",
+          sender: "assistant",
+          timestamp: new Date(),
+        },
+      ],
+    };
+    setConversations((prev) => [newConversation, ...prev]);
+    setActiveConversationId(newId);
+  };
+
+  const handleDeleteConversation = (id: string) => {
+    setConversations((prev) => prev.filter((conv) => conv.id !== id));
+    if (activeConversationId === id && conversations.length > 1) {
+      const remaining = conversations.filter((conv) => conv.id !== id);
+      setActiveConversationId(remaining[0].id);
+    }
+  };
+
+  const handleSelectConversation = (id: string) => {
+    setActiveConversationId(id);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

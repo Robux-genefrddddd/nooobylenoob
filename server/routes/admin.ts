@@ -6,12 +6,10 @@ import {
   calculateExpiryDate,
   formatLicenseKey,
 } from "../lib/licenseUtils";
-import { doc, collection, getDocs, setDoc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 const ADMIN_EMAIL = "founder@example.com";
 
-// In-memory storage for generated licenses and AI config (in production, use Firestore)
+// In-memory storage for generated licenses and AI config
 const generatedLicenses: Map<string, GeneratedLicense> = new Map();
 let aiConfig: AIConfig = {
   model: "x-ai/grok-4.1-fast",

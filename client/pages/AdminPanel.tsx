@@ -13,9 +13,11 @@ import {
   Power,
   Copy,
   Check,
+  Trash2,
+  Zap,
 } from "lucide-react";
-import { LicensePlan, AdminLicenseCreate, AdminUserAction } from "@shared/api";
-import { LicenseManager } from "@/lib/licenseManager";
+import { GeneratedLicense, AIConfig, UserListItem } from "@shared/api";
+import { adminFetchJSON } from "@/lib/adminAPI";
 
 interface AdminStats {
   totalUsers: number;
@@ -23,14 +25,8 @@ interface AdminStats {
   totalMessagesUsed: number;
 }
 
-interface UserManagementState {
-  selectedEmail: string;
-  action: "warn" | "suspend" | "ban" | "unban" | "reactivate" | null;
-  reason: string;
-}
-
 export default function AdminPanel() {
-  const { user, logout, maintenanceMode } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -39,24 +35,38 @@ export default function AdminPanel() {
   });
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "licenses" | "users" | "maintenance"
+    "overview" | "licenses" | "users" | "ai-config" | "maintenance"
   >("overview");
 
+  // License states
   const [licenseForm, setLicenseForm] = useState({
-    email: "",
-    plan: "Classic" as LicensePlan,
+    plan: "Classic" as const,
     durationDays: 30,
   });
-
-  const [userManagement, setUserManagement] = useState<UserManagementState>({
-    selectedEmail: "",
-    action: null,
-    reason: "",
-  });
-
+  const [generatedLicenses, setGeneratedLicenses] = useState<
+    GeneratedLicense[]
+  >([]);
   const [generatedKey, setGeneratedKey] = useState("");
   const [copiedKey, setCopiedKey] = useState(false);
-  const [maintenanceEnabled, setMaintenanceEnabled] = useState(maintenanceMode);
+
+  // AI Config states
+  const [aiConfig, setAIConfig] = useState<AIConfig>({
+    model: "x-ai/grok-4.1-fast",
+    systemPrompt:
+      "You are a helpful assistant. Respond to user queries in a clear, concise, and friendly manner.",
+    temperature: 0.7,
+    maxTokens: 1024,
+  });
+  const [aiConfigEditing, setAIConfigEditing] = useState(false);
+  const [aiConfigChanges, setAIConfigChanges] = useState<Partial<AIConfig>>({});
+
+  // User management states
+  const [users, setUsers] = useState<UserListItem[]>([]);
+  const [selectedUserEmail, setSelectedUserEmail] = useState("");
+  const [banReason, setBanReason] = useState("");
+
+  // Maintenance states
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
   const [maintenanceMessage, setMaintenanceMessage] = useState(
     "La plateforme est actuellement en maintenance. Veuillez réessayer plus tard.",
   );
@@ -67,12 +77,43 @@ export default function AdminPanel() {
       navigate("/admin-login");
       return;
     }
+
+    fetchLicenses();
+    fetchAIConfig();
+    fetchUsers();
   }, [navigate]);
 
   const adminAuth = sessionStorage.getItem("admin_authenticated");
   if (adminAuth !== "true") {
     return null;
   }
+
+  const fetchLicenses = async () => {
+    try {
+      const data = await adminFetchJSON<any>("/api/admin/licenses");
+      setGeneratedLicenses(data.licenses || []);
+    } catch (err) {
+      console.error("Failed to fetch licenses:", err);
+    }
+  };
+
+  const fetchAIConfig = async () => {
+    try {
+      const data = await adminFetchJSON<any>("/api/admin/ai-config");
+      setAIConfig(data.config);
+    } catch (err) {
+      console.error("Failed to fetch AI config:", err);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const data = await adminFetchJSON<any>("/api/admin/users");
+      setUsers(data.users || []);
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -83,83 +124,22 @@ export default function AdminPanel() {
     }
   };
 
-  const generateLicenseKey = async () => {
-    const { email, plan, durationDays } = licenseForm;
-
-    if (!email) {
-      alert("Veuillez entrer une adresse email");
-      return;
-    }
+  const generateLicense = async () => {
+    const { plan, durationDays } = licenseForm;
 
     try {
-      const response = await fetch("/api/admin/license/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          plan,
-          durationDays,
-        } as AdminLicenseCreate),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate license key");
-      }
-
-      const data = await response.json();
-      setGeneratedKey(data.key);
-    } catch (err) {
-      alert(`Erreur: ${err instanceof Error ? err.message : "Unknown error"}`);
-    }
-  };
-
-  const handleUserAction = async () => {
-    const { selectedEmail, action, reason } = userManagement;
-
-    if (!selectedEmail || !action) {
-      alert("Veuillez sélectionner une email et une action");
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/admin/user/action", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: selectedEmail,
-          action,
-          reason,
-        } as AdminUserAction),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to perform user action");
-      }
-
-      alert(`Action effectuée: ${action}`);
-      setUserManagement({ selectedEmail: "", action: null, reason: "" });
-    } catch (err) {
-      alert(`Erreur: ${err instanceof Error ? err.message : "Unknown error"}`);
-    }
-  };
-
-  const handleMaintenanceToggle = async () => {
-    try {
-      const response = await fetch("/api/admin/maintenance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          enabled: !maintenanceEnabled,
-          message: maintenanceMessage,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update maintenance mode");
-      }
-
-      setMaintenanceEnabled(!maintenanceEnabled);
-      alert("Mode maintenance mis à jour");
+      const data = await adminFetchJSON<any>(
+        "/api/admin/license/create-no-email",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            plan,
+            durationDays,
+          }),
+        },
+      );
+      setGeneratedKey(data.license.key);
+      fetchLicenses();
     } catch (err) {
       alert(`Erreur: ${err instanceof Error ? err.message : "Unknown error"}`);
     }
@@ -169,6 +149,73 @@ export default function AdminPanel() {
     navigator.clipboard.writeText(generatedKey);
     setCopiedKey(true);
     setTimeout(() => setCopiedKey(false), 2000);
+  };
+
+  const deleteLicense = async (licenseId: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette licence?")) return;
+
+    try {
+      setGeneratedLicenses(generatedLicenses.filter((l) => l.id !== licenseId));
+      alert("Licence supprimée avec succès");
+    } catch (err) {
+      alert(`Erreur: ${err instanceof Error ? err.message : "Unknown error"}`);
+    }
+  };
+
+  const saveAIConfig = async () => {
+    try {
+      const updatedConfig = { ...aiConfig, ...aiConfigChanges };
+      const data = await adminFetchJSON<any>("/api/admin/ai-config", {
+        method: "POST",
+        body: JSON.stringify(updatedConfig),
+      });
+      setAIConfig(data.config);
+      setAIConfigEditing(false);
+      setAIConfigChanges({});
+      alert("Configuration IA sauvegardée");
+    } catch (err) {
+      alert(`Erreur: ${err instanceof Error ? err.message : "Unknown error"}`);
+    }
+  };
+
+  const banUser = async () => {
+    if (!selectedUserEmail) {
+      alert("Veuillez sélectionner un utilisateur");
+      return;
+    }
+
+    try {
+      await adminFetchJSON<any>("/api/admin/user/action", {
+        method: "POST",
+        body: JSON.stringify({
+          email: selectedUserEmail,
+          action: "ban",
+          reason: banReason,
+        }),
+      });
+      alert("Utilisateur banni avec succès");
+      setSelectedUserEmail("");
+      setBanReason("");
+      fetchUsers();
+    } catch (err) {
+      alert(`Erreur: ${err instanceof Error ? err.message : "Unknown error"}`);
+    }
+  };
+
+  const handleMaintenanceToggle = async () => {
+    try {
+      await adminFetchJSON<any>("/api/admin/maintenance", {
+        method: "POST",
+        body: JSON.stringify({
+          enabled: !maintenanceEnabled,
+          message: maintenanceMessage,
+        }),
+      });
+      setMaintenanceEnabled(!maintenanceEnabled);
+      alert("Mode maintenance mis à jour");
+    } catch (err) {
+      alert(`Erreur: ${err instanceof Error ? err.message : "Unknown error"}`);
+    }
   };
 
   return (
@@ -213,31 +260,32 @@ export default function AdminPanel() {
 
       {/* Tabs */}
       <div
-        className="border-b flex gap-8 px-6"
+        className="border-b flex gap-8 px-6 overflow-x-auto"
         style={{ backgroundColor: "#0D0D0D", borderColor: "#1A1A1A" }}
       >
-        {(["overview", "licenses", "users", "maintenance"] as const).map(
-          (tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`py-4 px-2 font-semibold border-b-2 transition-colors ${
-                activeTab === tab
-                  ? "border-blue-500 text-blue-500"
-                  : "border-transparent text-slate-400 hover:text-white"
-              }`}
-            >
-              {tab === "overview" && "Aperçu"}
-              {tab === "licenses" && "Licences"}
-              {tab === "users" && "Utilisateurs"}
-              {tab === "maintenance" && "Maintenance"}
-            </button>
-          ),
-        )}
+        {(
+          ["overview", "licenses", "users", "ai-config", "maintenance"] as const
+        ).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`py-4 px-2 font-semibold border-b-2 whitespace-nowrap transition-colors ${
+              activeTab === tab
+                ? "border-blue-500 text-blue-500"
+                : "border-transparent text-slate-400 hover:text-white"
+            }`}
+          >
+            {tab === "overview" && "Aperçu"}
+            {tab === "licenses" && "Licences"}
+            {tab === "users" && "Utilisateurs"}
+            {tab === "ai-config" && "Config IA"}
+            {tab === "maintenance" && "Maintenance"}
+          </button>
+        ))}
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-6xl mx-auto">
           {/* Overview Tab */}
           {activeTab === "overview" && (
@@ -335,6 +383,7 @@ export default function AdminPanel() {
                 Gestion des Licences
               </h2>
 
+              {/* Create License */}
               <div
                 className="rounded-lg p-6 border mb-8"
                 style={{
@@ -346,31 +395,10 @@ export default function AdminPanel() {
                   className="text-xl font-semibold mb-4"
                   style={{ color: "#FFFFFF" }}
                 >
-                  Créer une nouvelle clé de licence
+                  Créer une nouvelle licence
                 </h3>
 
                 <div className="space-y-4">
-                  <div>
-                    <label
-                      className="block text-sm font-medium mb-2"
-                      style={{ color: "#FFFFFF" }}
-                    >
-                      Email Utilisateur
-                    </label>
-                    <input
-                      type="email"
-                      value={licenseForm.email}
-                      onChange={(e) =>
-                        setLicenseForm({
-                          ...licenseForm,
-                          email: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white"
-                      placeholder="user@example.com"
-                    />
-                  </div>
-
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label
@@ -384,7 +412,7 @@ export default function AdminPanel() {
                         onChange={(e) =>
                           setLicenseForm({
                             ...licenseForm,
-                            plan: e.target.value as LicensePlan,
+                            plan: e.target.value as any,
                           })
                         }
                         className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white"
@@ -419,7 +447,7 @@ export default function AdminPanel() {
                   </div>
 
                   <button
-                    onClick={generateLicenseKey}
+                    onClick={generateLicense}
                     className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
                   >
                     <Key size={20} />
@@ -434,7 +462,7 @@ export default function AdminPanel() {
                     </p>
                     <div className="flex items-center gap-2">
                       <code className="flex-1 text-white bg-black px-3 py-2 rounded font-mono text-sm break-all">
-                        {LicenseManager.formatLicenseKey(generatedKey)}
+                        {generatedKey}
                       </code>
                       <button
                         onClick={copyKeyToClipboard}
@@ -443,6 +471,60 @@ export default function AdminPanel() {
                         {copiedKey ? <Check size={20} /> : <Copy size={20} />}
                       </button>
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Licenses List */}
+              <div
+                className="rounded-lg p-6 border"
+                style={{
+                  backgroundColor: "#0D0D0D",
+                  borderColor: "#1A1A1A",
+                }}
+              >
+                <h3
+                  className="text-xl font-semibold mb-4"
+                  style={{ color: "#FFFFFF" }}
+                >
+                  Licences Générées ({generatedLicenses.length})
+                </h3>
+
+                {generatedLicenses.length === 0 ? (
+                  <p style={{ color: "#888888" }}>
+                    Aucune licence générée pour le moment
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {generatedLicenses.map((license) => (
+                      <div
+                        key={license.id}
+                        className="flex items-center justify-between p-3 bg-slate-900 rounded border border-slate-700"
+                      >
+                        <div className="flex-1">
+                          <p className="text-sm font-mono text-white break-all">
+                            {license.key}
+                          </p>
+                          <p
+                            className="text-xs mt-1"
+                            style={{ color: "#888888" }}
+                          >
+                            Plan: {license.plan} | Durée: {license.durationDays}
+                            j | Expire:{" "}
+                            {new Date(license.expiresAt).toLocaleDateString()}
+                            {license.usedBy &&
+                              ` | Utilisé par: ${license.usedBy}`}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => deleteLicense(license.id)}
+                          className="p-2 hover:bg-red-600/20 text-red-600 rounded transition-colors"
+                          title="Supprimer"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -459,6 +541,65 @@ export default function AdminPanel() {
                 Gestion des Utilisateurs
               </h2>
 
+              {/* Ban User Section */}
+              <div
+                className="rounded-lg p-6 border mb-8"
+                style={{
+                  backgroundColor: "#0D0D0D",
+                  borderColor: "#1A1A1A",
+                }}
+              >
+                <h3
+                  className="text-xl font-semibold mb-4"
+                  style={{ color: "#FFFFFF" }}
+                >
+                  Bannir un utilisateur
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "#FFFFFF" }}
+                    >
+                      Email de l'utilisateur
+                    </label>
+                    <input
+                      type="email"
+                      value={selectedUserEmail}
+                      onChange={(e) => setSelectedUserEmail(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white"
+                      placeholder="user@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "#FFFFFF" }}
+                    >
+                      Raison du ban
+                    </label>
+                    <textarea
+                      value={banReason}
+                      onChange={(e) => setBanReason(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white"
+                      placeholder="Motif du ban..."
+                      rows={3}
+                    />
+                  </div>
+
+                  <button
+                    onClick={banUser}
+                    className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Ban size={20} />
+                    Bannir cet utilisateur
+                  </button>
+                </div>
+              </div>
+
+              {/* Users List */}
               <div
                 className="rounded-lg p-6 border"
                 style={{
@@ -470,8 +611,144 @@ export default function AdminPanel() {
                   className="text-xl font-semibold mb-4"
                   style={{ color: "#FFFFFF" }}
                 >
-                  Actions sur les utilisateurs
+                  Tous les utilisateurs ({users.length})
                 </h3>
+
+                {users.length === 0 ? (
+                  <p style={{ color: "#888888" }}>Aucun utilisateur trouvé</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr
+                          style={{ borderColor: "#1A1A1A" }}
+                          className="border-b"
+                        >
+                          <th
+                            className="text-left py-3 px-4"
+                            style={{ color: "#FFFFFF" }}
+                          >
+                            Email
+                          </th>
+                          <th
+                            className="text-left py-3 px-4"
+                            style={{ color: "#FFFFFF" }}
+                          >
+                            Plan
+                          </th>
+                          <th
+                            className="text-left py-3 px-4"
+                            style={{ color: "#FFFFFF" }}
+                          >
+                            Messages
+                          </th>
+                          <th
+                            className="text-left py-3 px-4"
+                            style={{ color: "#FFFFFF" }}
+                          >
+                            Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.map((user) => (
+                          <tr
+                            key={user.id}
+                            style={{ borderColor: "#1A1A1A" }}
+                            className="border-b hover:bg-slate-900/50"
+                          >
+                            <td
+                              className="py-3 px-4"
+                              style={{ color: "#FFFFFF" }}
+                            >
+                              {user.email}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span
+                                className="px-2 py-1 rounded text-xs font-semibold"
+                                style={{
+                                  backgroundColor: "#0A84FF",
+                                  color: "#FFFFFF",
+                                }}
+                              >
+                                {user.plan}
+                              </span>
+                            </td>
+                            <td
+                              className="py-3 px-4"
+                              style={{ color: "#888888" }}
+                            >
+                              {user.messageCount}/{user.messageLimit}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span
+                                className={`px-2 py-1 rounded text-xs font-semibold ${
+                                  user.isBanned
+                                    ? "bg-red-600/20 text-red-400"
+                                    : user.isSuspended
+                                      ? "bg-yellow-600/20 text-yellow-400"
+                                      : "bg-green-600/20 text-green-400"
+                                }`}
+                              >
+                                {user.isBanned
+                                  ? "Banni"
+                                  : user.isSuspended
+                                    ? "Suspendu"
+                                    : "Actif"}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* AI Config Tab */}
+          {activeTab === "ai-config" && (
+            <div>
+              <h2
+                className="text-2xl font-bold mb-8"
+                style={{ color: "#FFFFFF" }}
+              >
+                Configuration de l'IA
+              </h2>
+
+              <div
+                className="rounded-lg p-6 border"
+                style={{
+                  backgroundColor: "#0D0D0D",
+                  borderColor: "#1A1A1A",
+                }}
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3
+                    className="text-xl font-semibold"
+                    style={{ color: "#FFFFFF" }}
+                  >
+                    Paramètres du modèle
+                  </h3>
+                  <button
+                    onClick={() => {
+                      if (aiConfigEditing) {
+                        setAIConfigEditing(false);
+                        setAIConfigChanges({});
+                      } else {
+                        setAIConfigEditing(true);
+                      }
+                    }}
+                    className="px-4 py-2 rounded-lg font-semibold transition-colors"
+                    style={{
+                      backgroundColor: aiConfigEditing ? "#0A84FF" : "#444444",
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    {aiConfigEditing ? "Annuler" : "Modifier"}
+                  </button>
+                </div>
 
                 <div className="space-y-4">
                   <div>
@@ -479,20 +756,27 @@ export default function AdminPanel() {
                       className="block text-sm font-medium mb-2"
                       style={{ color: "#FFFFFF" }}
                     >
-                      Email Utilisateur
+                      Modèle IA
                     </label>
                     <input
-                      type="email"
-                      value={userManagement.selectedEmail}
+                      type="text"
+                      value={
+                        aiConfigEditing
+                          ? aiConfigChanges.model || aiConfig.model
+                          : aiConfig.model
+                      }
                       onChange={(e) =>
-                        setUserManagement({
-                          ...userManagement,
-                          selectedEmail: e.target.value,
+                        setAIConfigChanges({
+                          ...aiConfigChanges,
+                          model: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white"
-                      placeholder="user@example.com"
+                      disabled={!aiConfigEditing}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white disabled:opacity-50"
                     />
+                    <p className="text-xs mt-1" style={{ color: "#888888" }}>
+                      Exemple: x-ai/grok-4.1-fast, gpt-4, claude-3-opus
+                    </p>
                   </div>
 
                   <div>
@@ -500,25 +784,30 @@ export default function AdminPanel() {
                       className="block text-sm font-medium mb-2"
                       style={{ color: "#FFFFFF" }}
                     >
-                      Action
+                      Température (0 - 1)
                     </label>
-                    <select
-                      value={userManagement.action || ""}
+                    <input
+                      type="number"
+                      value={
+                        aiConfigEditing
+                          ? aiConfigChanges.temperature || aiConfig.temperature
+                          : aiConfig.temperature
+                      }
                       onChange={(e) =>
-                        setUserManagement({
-                          ...userManagement,
-                          action: (e.target.value || null) as any,
+                        setAIConfigChanges({
+                          ...aiConfigChanges,
+                          temperature: parseFloat(e.target.value),
                         })
                       }
-                      className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white"
-                    >
-                      <option value="">Sélectionner une action</option>
-                      <option value="warn">Avertir</option>
-                      <option value="suspend">Suspendre</option>
-                      <option value="ban">Bannir</option>
-                      <option value="unban">Débannir</option>
-                      <option value="reactivate">Réactiver</option>
-                    </select>
+                      disabled={!aiConfigEditing}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white disabled:opacity-50"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                    />
+                    <p className="text-xs mt-1" style={{ color: "#888888" }}>
+                      Plus élevé = plus créatif, plus bas = plus déterministe
+                    </p>
                   </div>
 
                   <div>
@@ -526,29 +815,69 @@ export default function AdminPanel() {
                       className="block text-sm font-medium mb-2"
                       style={{ color: "#FFFFFF" }}
                     >
-                      Raison (optionnel)
+                      Max tokens
+                    </label>
+                    <input
+                      type="number"
+                      value={
+                        aiConfigEditing
+                          ? aiConfigChanges.maxTokens || aiConfig.maxTokens
+                          : aiConfig.maxTokens
+                      }
+                      onChange={(e) =>
+                        setAIConfigChanges({
+                          ...aiConfigChanges,
+                          maxTokens: parseInt(e.target.value),
+                        })
+                      }
+                      disabled={!aiConfigEditing}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white disabled:opacity-50"
+                      min="100"
+                      max="4000"
+                    />
+                    <p className="text-xs mt-1" style={{ color: "#888888" }}>
+                      Longueur maximale de la réponse
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: "#FFFFFF" }}
+                    >
+                      Prompt système
                     </label>
                     <textarea
-                      value={userManagement.reason}
+                      value={
+                        aiConfigEditing
+                          ? aiConfigChanges.systemPrompt ||
+                            aiConfig.systemPrompt
+                          : aiConfig.systemPrompt
+                      }
                       onChange={(e) =>
-                        setUserManagement({
-                          ...userManagement,
-                          reason: e.target.value,
+                        setAIConfigChanges({
+                          ...aiConfigChanges,
+                          systemPrompt: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white"
-                      placeholder="Motif de l'action..."
-                      rows={3}
+                      disabled={!aiConfigEditing}
+                      className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-600 text-white disabled:opacity-50"
+                      rows={6}
                     />
+                    <p className="text-xs mt-1" style={{ color: "#888888" }}>
+                      Définit le comportement et la personnalité de l'IA
+                    </p>
                   </div>
 
-                  <button
-                    onClick={handleUserAction}
-                    className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
-                  >
-                    <AlertTriangle size={20} />
-                    Appliquer l'action
-                  </button>
+                  {aiConfigEditing && (
+                    <button
+                      onClick={saveAIConfig}
+                      className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Check size={20} />
+                      Sauvegarder les changements
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

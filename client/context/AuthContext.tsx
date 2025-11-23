@@ -131,7 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                               messageCount: licenseData.messageCount,
                               messageLimit: licenseData.messageLimit,
                               expiresAt: licenseData.expiresAt,
-                              plan: licenseData.plan,
+                              plan: licenseData.plan || prev.plan,
                             }
                           : null,
                       );
@@ -380,7 +380,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   messageCount: licenseData.messageCount,
                   messageLimit: licenseData.messageLimit,
                   expiresAt: licenseData.expiresAt,
-                  plan: licenseData.plan,
+                  plan: licenseData.plan || prev.plan,
                   isBanned: licenseData.isBanned,
                   isSuspended: licenseData.isSuspended,
                 }

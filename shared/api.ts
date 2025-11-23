@@ -99,3 +99,32 @@ export interface MaintenanceConfig {
   showCountdown: boolean;
   restrictedPaths?: string[];
 }
+
+export interface GeneratedLicense {
+  id: string;
+  key: string;
+  plan: LicensePlan;
+  durationDays: number;
+  expiresAt: string;
+  createdAt: string;
+  usedBy?: string;
+}
+
+export interface AIConfig {
+  model: string;
+  systemPrompt: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+export interface UserListItem {
+  id: string;
+  email: string;
+  name: string;
+  plan: LicensePlan;
+  messageCount: number;
+  messageLimit: number;
+  isBanned: boolean;
+  isSuspended: boolean;
+  createdAt: string;
+}

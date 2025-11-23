@@ -1,4 +1,5 @@
 import { RequestHandler } from "express";
+import { getAIConfig_ } from "./admin";
 
 interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -25,9 +26,9 @@ export const handleChat: RequestHandler = async (req, res) => {
         .json({ error: "OpenRouter API key not configured" });
     }
 
-    // Clean system prompt
-    const SYSTEM_PROMPT =
-      "You are a helpful assistant. Respond to user queries in a clear, concise, and friendly manner.";
+    // Get AI config from admin settings
+    const aiConfig = getAIConfig_();
+    const SYSTEM_PROMPT = aiConfig.systemPrompt;
 
     // Inject system prompt if not already present
     const finalMessages: ChatMessage[] =
@@ -46,10 +47,10 @@ export const handleChat: RequestHandler = async (req, res) => {
           "X-Title": "Chat Application",
         },
         body: JSON.stringify({
-          model: "x-ai/grok-4.1-fast",
+          model: aiConfig.model,
           messages: finalMessages,
-          temperature: 0.7,
-          max_tokens: 1024,
+          temperature: aiConfig.temperature,
+          max_tokens: aiConfig.maxTokens,
         }),
       },
     );

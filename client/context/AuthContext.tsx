@@ -228,6 +228,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         plan: "Gratuit",
         createdAt: new Date().toISOString(),
+        isBanned: false,
+        isSuspended: false,
+        messageCount: 0,
+        avatar: "👤",
+        avatarType: "emoji",
       });
 
       setUser({
@@ -237,8 +242,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         plan: "Gratuit",
       });
     } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : "Registration failed";
+      const errorMsg = err instanceof Error ? err.message : "Registration failed";
+
+      if (errorMsg.includes("email-already-in-use")) {
+        setError("An account with this email already exists");
+        throw new Error("An account with this email already exists");
+      }
+
       setError(errorMsg);
       throw err;
     } finally {

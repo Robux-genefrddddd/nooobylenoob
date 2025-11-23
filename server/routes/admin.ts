@@ -280,7 +280,8 @@ export const handleGetMessageHistory: RequestHandler = async (req, res) => {
     }
 
     try {
-      const { adminDb } = await import("../lib/firebase-admin");
+      const { getAdminDb } = await import("../lib/firebase-admin");
+      const adminDb = await getAdminDb();
       if (!adminDb) {
         return res.json({
           success: true,

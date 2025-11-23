@@ -17,6 +17,7 @@ import {
   Zap,
 } from "lucide-react";
 import { GeneratedLicense, AIConfig, UserListItem } from "@shared/api";
+import { adminFetchJSON } from "@/lib/adminAPI";
 
 interface AdminStats {
   totalUsers: number;
@@ -86,11 +87,8 @@ export default function AdminPanel() {
 
   const fetchLicenses = async () => {
     try {
-      const response = await fetch("/api/admin/licenses");
-      if (response.ok) {
-        const data = await response.json();
-        setGeneratedLicenses(data.licenses || []);
-      }
+      const data = await adminFetchJSON<any>("/api/admin/licenses");
+      setGeneratedLicenses(data.licenses || []);
     } catch (err) {
       console.error("Failed to fetch licenses:", err);
     }
@@ -98,11 +96,8 @@ export default function AdminPanel() {
 
   const fetchAIConfig = async () => {
     try {
-      const response = await fetch("/api/admin/ai-config");
-      if (response.ok) {
-        const data = await response.json();
-        setAIConfig(data.config);
-      }
+      const data = await adminFetchJSON<any>("/api/admin/ai-config");
+      setAIConfig(data.config);
     } catch (err) {
       console.error("Failed to fetch AI config:", err);
     }
@@ -110,11 +105,8 @@ export default function AdminPanel() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("/api/admin/users");
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data.users || []);
-      }
+      const data = await adminFetchJSON<any>("/api/admin/users");
+      setUsers(data.users || []);
     } catch (err) {
       console.error("Failed to fetch users:", err);
     }
@@ -133,20 +125,13 @@ export default function AdminPanel() {
     const { plan, durationDays } = licenseForm;
 
     try {
-      const response = await fetch("/api/admin/license/create-no-email", {
+      const data = await adminFetchJSON<any>("/api/admin/license/create-no-email", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           plan,
           durationDays,
         }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate license key");
-      }
-
-      const data = await response.json();
       setGeneratedKey(data.license.key);
       fetchLicenses();
     } catch (err) {
@@ -176,17 +161,10 @@ export default function AdminPanel() {
   const saveAIConfig = async () => {
     try {
       const updatedConfig = { ...aiConfig, ...aiConfigChanges };
-      const response = await fetch("/api/admin/ai-config", {
+      const data = await adminFetchJSON<any>("/api/admin/ai-config", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedConfig),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to save AI config");
-      }
-
-      const data = await response.json();
       setAIConfig(data.config);
       setAIConfigEditing(false);
       setAIConfigChanges({});
@@ -203,20 +181,14 @@ export default function AdminPanel() {
     }
 
     try {
-      const response = await fetch("/api/admin/user/action", {
+      await adminFetchJSON<any>("/api/admin/user/action", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: selectedUserEmail,
           action: "ban",
           reason: banReason,
         }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to ban user");
-      }
-
       alert("Utilisateur banni avec succès");
       setSelectedUserEmail("");
       setBanReason("");
@@ -228,19 +200,13 @@ export default function AdminPanel() {
 
   const handleMaintenanceToggle = async () => {
     try {
-      const response = await fetch("/api/admin/maintenance", {
+      await adminFetchJSON<any>("/api/admin/maintenance", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           enabled: !maintenanceEnabled,
           message: maintenanceMessage,
         }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to update maintenance mode");
-      }
-
       setMaintenanceEnabled(!maintenanceEnabled);
       alert("Mode maintenance mis à jour");
     } catch (err) {

@@ -12,7 +12,7 @@ interface BanWarning {
 }
 
 export default function BanWarningModal() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [warning, setWarning] = useState<BanWarning | null>(null);
   const [acknowledged, setAcknowledged] = useState(false);
 
@@ -46,6 +46,31 @@ export default function BanWarningModal() {
     // If user passed all checks, no warning needed
     setWarning(null);
   }, [user]);
+
+  useEffect(() => {
+    if (!warning) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" || e.key === "Enter") {
+        e.preventDefault();
+      }
+    };
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (warning.type === "ban") {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown, true);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [warning]);
 
   if (!warning) {
     return null;

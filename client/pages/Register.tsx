@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import Turnstile from "react-turnstile";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { getSiteKey, verifyCaptchaToken } from "@/lib/turnstile";
 
 export default function Register() {

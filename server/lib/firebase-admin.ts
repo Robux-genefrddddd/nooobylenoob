@@ -1,11 +1,19 @@
-import * as admin from "firebase-admin";
-
+let admin: any = null;
 let initialized = false;
 
-export function initializeFirebaseAdmin() {
-  if (initialized || (admin.apps && admin.apps.length > 0)) {
-    return;
+async function getFirebaseAdmin() {
+  if (admin) return admin;
+  try {
+    admin = await import("firebase-admin");
+    return admin;
+  } catch (err) {
+    console.warn("Firebase Admin SDK not available:", err);
+    return null;
   }
+}
+
+export async function initializeFirebaseAdmin() {
+  if (initialized) return;
 
   if (
     !process.env.FIREBASE_PRIVATE_KEY ||
@@ -17,6 +25,14 @@ export function initializeFirebaseAdmin() {
   }
 
   try {
+    const adminModule = await getFirebaseAdmin();
+    if (!adminModule) return;
+
+    if (adminModule.apps && adminModule.apps.length > 0) {
+      initialized = true;
+      return;
+    }
+
     const serviceAccount = {
       type: process.env.FIREBASE_TYPE || "service_account",
       project_id: process.env.VITE_FIREBASE_PROJECT_ID,
@@ -31,8 +47,8 @@ export function initializeFirebaseAdmin() {
       client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
     };
 
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+    adminModule.initializeApp({
+      credential: adminModule.credential.cert(serviceAccount),
       projectId: process.env.VITE_FIREBASE_PROJECT_ID,
     });
 
@@ -42,17 +58,21 @@ export function initializeFirebaseAdmin() {
   }
 }
 
-export function getAdminAuth() {
-  initializeFirebaseAdmin();
-  return admin.apps && admin.apps.length > 0 ? admin.auth() : null;
+export async function getAdminAuth() {
+  await initializeFirebaseAdmin();
+  const adminModule = await getFirebaseAdmin();
+  return adminModule && adminModule.apps && adminModule.apps.length > 0
+    ? adminModule.auth()
+    : null;
 }
 
-export function getAdminDb() {
-  initializeFirebaseAdmin();
-  return admin.apps && admin.apps.length > 0 ? admin.firestore() : null;
+export async function getAdminDb() {
+  await initializeFirebaseAdmin();
+  const adminModule = await getFirebaseAdmin();
+  return adminModule && adminModule.apps && adminModule.apps.length > 0
+    ? adminModule.firestore()
+    : null;
 }
 
-export const adminAuth = getAdminAuth();
-export const adminDb = getAdminDb();
-
-export default admin;
+export const adminAuth = null;
+export const adminDb = null;

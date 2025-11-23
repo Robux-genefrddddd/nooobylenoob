@@ -143,10 +143,14 @@ export default function Register() {
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Name Field */}
-              <div>
+              <div
+                style={{
+                  animation: "fadeInUp 0.6s ease-out 0.3s both",
+                }}
+              >
                 <label
                   className="block text-sm font-medium mb-2"
-                  style={{ color: "#1a1a1a" }}
+                  style={{ color: "#FFFFFF" }}
                 >
                   Nom
                 </label>
@@ -159,27 +163,31 @@ export default function Register() {
                   disabled={isLoading}
                   className="w-full px-4 py-3 rounded-lg border focus:outline-none transition-all duration-300"
                   style={{
-                    backgroundColor: "#f5f5f5",
-                    borderColor: "#d0d0d0",
-                    color: "#1a1a1a",
+                    backgroundColor: "#1A1A1A",
+                    borderColor: "#2A2A2A",
+                    color: "#FFFFFF",
                   }}
                   onFocus={(e) => {
                     (e.target as HTMLElement).style.borderColor = "#0A84FF";
                     (e.target as HTMLElement).style.boxShadow =
-                      "0 0 0 3px rgba(10, 132, 255, 0.1)";
+                      "0 0 20px rgba(10, 132, 255, 0.2)";
                   }}
                   onBlur={(e) => {
-                    (e.target as HTMLElement).style.borderColor = "#d0d0d0";
+                    (e.target as HTMLElement).style.borderColor = "#2A2A2A";
                     (e.target as HTMLElement).style.boxShadow = "none";
                   }}
                 />
               </div>
 
               {/* Email Field */}
-              <div>
+              <div
+                style={{
+                  animation: "fadeInUp 0.6s ease-out 0.4s both",
+                }}
+              >
                 <label
                   className="block text-sm font-medium mb-2"
-                  style={{ color: "#1a1a1a" }}
+                  style={{ color: "#FFFFFF" }}
                 >
                   Email
                 </label>
@@ -192,27 +200,31 @@ export default function Register() {
                   disabled={isLoading}
                   className="w-full px-4 py-3 rounded-lg border focus:outline-none transition-all duration-300"
                   style={{
-                    backgroundColor: "#f5f5f5",
-                    borderColor: "#d0d0d0",
-                    color: "#1a1a1a",
+                    backgroundColor: "#1A1A1A",
+                    borderColor: "#2A2A2A",
+                    color: "#FFFFFF",
                   }}
                   onFocus={(e) => {
                     (e.target as HTMLElement).style.borderColor = "#0A84FF";
                     (e.target as HTMLElement).style.boxShadow =
-                      "0 0 0 3px rgba(10, 132, 255, 0.1)";
+                      "0 0 20px rgba(10, 132, 255, 0.2)";
                   }}
                   onBlur={(e) => {
-                    (e.target as HTMLElement).style.borderColor = "#d0d0d0";
+                    (e.target as HTMLElement).style.borderColor = "#2A2A2A";
                     (e.target as HTMLElement).style.boxShadow = "none";
                   }}
                 />
               </div>
 
               {/* Password Field */}
-              <div>
+              <div
+                style={{
+                  animation: "fadeInUp 0.6s ease-out 0.5s both",
+                }}
+              >
                 <label
                   className="block text-sm font-medium mb-2"
-                  style={{ color: "#1a1a1a" }}
+                  style={{ color: "#FFFFFF" }}
                 >
                   Mot de passe
                 </label>
@@ -225,17 +237,17 @@ export default function Register() {
                   disabled={isLoading}
                   className="w-full px-4 py-3 rounded-lg border focus:outline-none transition-all duration-300"
                   style={{
-                    backgroundColor: "#f5f5f5",
-                    borderColor: "#d0d0d0",
-                    color: "#1a1a1a",
+                    backgroundColor: "#1A1A1A",
+                    borderColor: "#2A2A2A",
+                    color: "#FFFFFF",
                   }}
                   onFocus={(e) => {
                     (e.target as HTMLElement).style.borderColor = "#0A84FF";
                     (e.target as HTMLElement).style.boxShadow =
-                      "0 0 0 3px rgba(10, 132, 255, 0.1)";
+                      "0 0 20px rgba(10, 132, 255, 0.2)";
                   }}
                   onBlur={(e) => {
-                    (e.target as HTMLElement).style.borderColor = "#d0d0d0";
+                    (e.target as HTMLElement).style.borderColor = "#2A2A2A";
                     (e.target as HTMLElement).style.boxShadow = "none";
                   }}
                 />
@@ -288,7 +300,7 @@ export default function Register() {
                     Création en cours...
                   </span>
                 ) : (
-                  "Créer mon compte"
+                  "Cr��er mon compte"
                 )}
               </button>
             </form>

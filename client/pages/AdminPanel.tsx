@@ -291,7 +291,14 @@ export default function AdminPanel() {
         style={{ backgroundColor: "#0D0D0D", borderColor: "#1A1A1A" }}
       >
         {(
-          ["overview", "licenses", "users", "ai-config", "maintenance"] as const
+          [
+            "overview",
+            "licenses",
+            "users",
+            "ai-config",
+            "maintenance",
+            "message-history",
+          ] as const
         ).map((tab) => (
           <button
             key={tab}
@@ -307,6 +314,7 @@ export default function AdminPanel() {
             {tab === "users" && "Utilisateurs"}
             {tab === "ai-config" && "Config IA"}
             {tab === "maintenance" && "Maintenance"}
+            {tab === "message-history" && "Historique Messages"}
           </button>
         ))}
       </div>

@@ -1,13 +1,24 @@
 import { RequestHandler } from "express";
-import { AdminLicenseCreate, AdminUserAction, LicensePlan } from "@shared/api";
+import { AdminLicenseCreate, AdminUserAction, LicensePlan, GeneratedLicense, AIConfig, UserListItem } from "@shared/api";
 import {
   generateLicenseKey,
   calculateMessageLimit,
   calculateExpiryDate,
   formatLicenseKey,
 } from "../lib/licenseUtils";
+import { doc, collection, getDocs, setDoc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const ADMIN_EMAIL = "founder@example.com";
+
+// In-memory storage for generated licenses and AI config (in production, use Firestore)
+const generatedLicenses: Map<string, GeneratedLicense> = new Map();
+let aiConfig: AIConfig = {
+  model: "x-ai/grok-4.1-fast",
+  systemPrompt: "You are a helpful assistant. Respond to user queries in a clear, concise, and friendly manner.",
+  temperature: 0.7,
+  maxTokens: 1024,
+};
 
 async function verifyAdmin(email?: string): Promise<boolean> {
   return email === ADMIN_EMAIL;

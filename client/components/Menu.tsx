@@ -132,21 +132,34 @@ export default function Menu({ isDark, onThemeToggle }: MenuProps) {
 
       {/* Menu Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-screen w-64 sm:w-72 bg-white dark:bg-black border-r border-gray-200 dark:border-gray-900 shadow-2xl z-50 transition-transform duration-300 ease-out overflow-hidden flex flex-col ${
+        className={`fixed top-0 left-0 h-screen w-64 sm:w-72 shadow-2xl z-50 transition-transform duration-300 ease-out overflow-hidden flex flex-col ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{
+          backgroundColor: "#0A0A0A",
+          borderRight: "1px solid #1A1A1A",
           boxShadow: isOpen ? "0 25px 50px -12px rgba(0, 0, 0, 0.25)" : "none",
         }}
       >
         {/* Menu Header with New Conversation Button */}
-        <div className="px-6 py-6 border-b border-gray-200 dark:border-gray-900 flex-shrink-0">
-          <h2 className="text-lg font-bold text-black dark:text-white mb-4">
+        <div
+          className="px-6 py-6 border-b flex-shrink-0"
+          style={{ borderColor: "#1A1A1A" }}
+        >
+          <h2
+            className="text-lg font-bold mb-4"
+            style={{ color: "#FFFFFF" }}
+          >
             Menu
           </h2>
           <button
             onClick={handleNewConversation}
-            className="btn-glow w-full flex items-center justify-center gap-2 px-4 py-2 text-sm"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-lg transition-all duration-200 font-semibold"
+            style={{
+              backgroundColor: "#0A84FF",
+              color: "#FFFFFF",
+              boxShadow: "0 0 15px rgba(10, 132, 255, 0.3)",
+            }}
           >
             <Plus size={18} />
             Nouvelle Conversation

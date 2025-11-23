@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Paperclip, Smile } from "lucide-react";
+import { Send, Paperclip, Smile, ArrowRight } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface InputAreaProps {
   value: string;

@@ -64,7 +64,7 @@ export const handleCreateLicense: RequestHandler = async (req, res) => {
 
 export const handleUserAction: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -96,7 +96,7 @@ export const handleUserAction: RequestHandler = async (req, res) => {
 
 export const handleMaintenanceMode: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -115,7 +115,7 @@ export const handleMaintenanceMode: RequestHandler = async (req, res) => {
 
 export const handleGetStats: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -132,7 +132,7 @@ export const handleGetStats: RequestHandler = async (req, res) => {
 
 export const handleCreateLicenseNoEmail: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -183,7 +183,7 @@ export const handleCreateLicenseNoEmail: RequestHandler = async (req, res) => {
 
 export const handleGetGeneratedLicenses: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -201,7 +201,7 @@ export const handleGetGeneratedLicenses: RequestHandler = async (req, res) => {
 
 export const handleGetAIConfig: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -217,7 +217,7 @@ export const handleGetAIConfig: RequestHandler = async (req, res) => {
 
 export const handleUpdateAIConfig: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
@@ -248,7 +248,7 @@ export const handleUpdateAIConfig: RequestHandler = async (req, res) => {
 
 export const handleGetUsers: RequestHandler = async (req, res) => {
   try {
-    if (!verifyAdmin(req)) {
+    if (!(await verifyAdmin(req))) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 

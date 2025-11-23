@@ -13,8 +13,9 @@ import {
   calculateExpiryDate,
   formatLicenseKey,
 } from "../lib/licenseUtils";
+import { verifyAdminToken } from "../lib/adminAuth";
+import { adminDb } from "../lib/firebase-admin";
 
-// In-memory storage for generated licenses and AI config
 const generatedLicenses: Map<string, GeneratedLicense> = new Map();
 let aiConfig: AIConfig = {
   model: "x-ai/grok-4.1-fast",
@@ -24,9 +25,9 @@ let aiConfig: AIConfig = {
   maxTokens: 1024,
 };
 
-function verifyAdmin(req: any): boolean {
-  const adminAuth = req.headers["x-admin-auth"];
-  return adminAuth === "true";
+async function verifyAdmin(req: any): Promise<boolean> {
+  const result = await verifyAdminToken(req);
+  return result.isAdmin;
 }
 
 export const handleCreateLicense: RequestHandler = async (req, res) => {

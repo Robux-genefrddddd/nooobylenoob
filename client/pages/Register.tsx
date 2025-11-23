@@ -93,6 +93,17 @@ export default function Register() {
             animation: "slideUp 0.6s ease-out cubic-bezier(0.34, 1.56, 0.64, 1)",
           }}
         >
+          {/* Blue Wave Background Animation */}
+          <div
+            className="absolute inset-0 rounded-2xl"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(10, 132, 255, 0.15) 0%, rgba(10, 132, 255, 0.05) 50%, transparent 100%)",
+              animation: "blueWave 4s ease-in-out infinite",
+              pointerEvents: "none",
+            }}
+          />
+
           {/* Animated border glow */}
           <div
             className="absolute inset-0 rounded-2xl opacity-0"

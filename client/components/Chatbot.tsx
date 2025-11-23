@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Plus, User } from "lucide-react";
 import Menu from "./Menu";
+import Sidebar from "./Sidebar";
 
 interface Message {
   id: string;
@@ -9,19 +10,66 @@ interface Message {
   timestamp: Date;
 }
 
+interface Conversation {
+  id: string;
+  title: string;
+  timestamp: Date;
+  messages: Message[];
+}
+
 export default function Chatbot() {
-  const [messages, setMessages] = useState<Message[]>([
+  const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: "1",
-      content: "Hello! I'm your AI assistant. How can I help you today?",
-      sender: "assistant",
-      timestamp: new Date(),
+      title: "How to learn React",
+      timestamp: new Date(Date.now() - 3600000),
+      messages: [
+        {
+          id: "1",
+          content: "Hello! I'm your AI assistant. How can I help you today?",
+          sender: "assistant",
+          timestamp: new Date(),
+        },
+      ],
+    },
+    {
+      id: "2",
+      title: "JavaScript best practices",
+      timestamp: new Date(Date.now() - 86400000),
+      messages: [
+        {
+          id: "1",
+          content: "Let's discuss JavaScript best practices.",
+          sender: "assistant",
+          timestamp: new Date(),
+        },
+      ],
+    },
+    {
+      id: "3",
+      title: "Web development tips",
+      timestamp: new Date(Date.now() - 172800000),
+      messages: [
+        {
+          id: "1",
+          content: "Here are some useful web development tips.",
+          sender: "assistant",
+          timestamp: new Date(),
+        },
+      ],
     },
   ]);
+
+  const [activeConversationId, setActiveConversationId] = useState<string>("1");
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const activeConversation = conversations.find(
+    (conv) => conv.id === activeConversationId
+  );
+  const messages = activeConversation?.messages || [];
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");

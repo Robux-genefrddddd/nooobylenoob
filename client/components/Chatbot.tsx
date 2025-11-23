@@ -246,6 +246,7 @@ export default function Chatbot() {
         onSelectConversation={handleSelectConversation}
         onNewConversation={handleNewConversation}
         onDeleteConversation={handleDeleteConversation}
+        onRenameConversation={handleRenameConversation}
       />
 
       {/* Main Chat Area */}

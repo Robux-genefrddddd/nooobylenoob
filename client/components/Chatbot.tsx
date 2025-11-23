@@ -297,9 +297,30 @@ export default function Chatbot() {
                         }
                   }
                 >
-                  <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
-                    {message.content}
-                  </p>
+                  {message.sender === "user" ? (
+                    <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                  ) : (
+                    <div>
+                      {parseCodeBlocks(message.content).map((part, idx) =>
+                        typeof part === "string" ? (
+                          <p
+                            key={idx}
+                            className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap mb-2"
+                          >
+                            {part}
+                          </p>
+                        ) : (
+                          <CodeBlock
+                            key={idx}
+                            code={part.code}
+                            language={part.language}
+                          />
+                        )
+                      )}
+                    </div>
+                  )}
                   <p
                     className="text-xs mt-2.5"
                     style={

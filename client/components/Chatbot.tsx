@@ -22,6 +22,7 @@ interface Conversation {
 }
 
 export default function Chatbot() {
+  const { user, canSendMessage, incrementMessageCount } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>(() => {
     const newId = Date.now().toString();
     return [

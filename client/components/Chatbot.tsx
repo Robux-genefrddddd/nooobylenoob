@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Send } from "lucide-react";
+import Menu from "./Menu";
 
 interface Message {
   id: string;
@@ -19,7 +20,32 @@ export default function Chatbot() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isDark, setIsDark] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const initialDark = savedTheme ? savedTheme === "dark" : prefersDark;
+    setIsDark(initialDark);
+    updateTheme(initialDark);
+  }, []);
+
+  const updateTheme = (dark: boolean) => {
+    const root = document.documentElement;
+    if (dark) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  };
+
+  const handleThemeToggle = () => {
+    const newIsDark = !isDark;
+    setIsDark(newIsDark);
+    updateTheme(newIsDark);
+    localStorage.setItem("theme", newIsDark ? "dark" : "light");
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

@@ -125,13 +125,13 @@ export default function AdminLogin() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isLoading || !username || !password}
+            disabled={isLoading || !email || !password}
             className="w-full py-3 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50"
             style={{
-              backgroundColor: username && password ? "#0A84FF" : "#2A2A2A",
+              backgroundColor: email && password ? "#0A84FF" : "#2A2A2A",
               color: "#FFFFFF",
               boxShadow:
-                username && password
+                email && password
                   ? "0 0 20px rgba(10, 132, 255, 0.4)"
                   : "none",
             }}

@@ -299,6 +299,27 @@ export default function Register() {
                 </div>
               )}
 
+              {/* Cloudflare Turnstile */}
+              <div
+                className="flex justify-center"
+                style={{
+                  animation: "fadeInUp 0.6s ease-out 0.55s both",
+                }}
+              >
+                <Turnstile
+                  ref={captchaRef}
+                  sitekey={getSiteKey()}
+                  onVerify={(token) => setCaptchaToken(token)}
+                  onError={() => {
+                    setError("Captcha verification failed. Please try again.");
+                    setCaptchaToken("");
+                  }}
+                  onExpire={() => setCaptchaToken("")}
+                  theme="dark"
+                  language="fr"
+                />
+              </div>
+
               {/* Submit Button */}
               <button
                 type="submit"

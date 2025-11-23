@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, AlertCircle } from "lucide-react";
-
-const ADMIN_USERNAME = "Admin";
-const ADMIN_PASSWORD = "Antoine80@";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -17,18 +16,20 @@ export default function AdminLogin() {
     setError("");
     setIsLoading(true);
 
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      try {
-        sessionStorage.setItem("admin_authenticated", "true");
-        navigate("/admin-panel");
-      } catch (err) {
-        setError("Navigation failed");
-      }
-    } else {
-      setError("Invalid username or password");
-    }
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const token = await userCredential.user.getIdToken();
 
-    setIsLoading(false);
+      sessionStorage.setItem("admin_token", token);
+      sessionStorage.setItem("admin_authenticated", "true");
+      navigate("/admin-panel");
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Login failed. Please check your credentials.";
+      setError(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

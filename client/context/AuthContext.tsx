@@ -308,6 +308,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateAvatar = async (
+    avatar: string,
+    type: "emoji" | "image" | "url",
+  ): Promise<void> => {
+    if (!user) return;
+
+    try {
+      setError(null);
+      await setDoc(
+        doc(db, "users", user.id),
+        { avatar, avatarType: type },
+        { merge: true },
+      );
+      setUser({ ...user, avatar, avatarType: type });
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to update avatar";
+      setError(errorMsg);
+      throw err;
+    }
+  };
+
   const incrementMessageCount = async (): Promise<void> => {
     if (!user) return;
 

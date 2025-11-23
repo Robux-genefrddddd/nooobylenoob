@@ -78,23 +78,23 @@ export default function AdminLogin() {
             </div>
           )}
 
-          {/* Username */}
+          {/* Email */}
           <div>
             <label
               className="block text-sm font-medium mb-2"
               style={{ color: "#FFFFFF" }}
             >
-              Username
+              Email
             </label>
             <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@example.com"
               className="w-full px-4 py-3 rounded-lg border focus:outline-none transition-all"
               style={{
                 backgroundColor: "#1A1A1A",
-                borderColor: username ? "#0A84FF" : "#2A2A2A",
+                borderColor: email ? "#0A84FF" : "#2A2A2A",
                 color: "#FFFFFF",
               }}
             />

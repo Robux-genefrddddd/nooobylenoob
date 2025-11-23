@@ -46,7 +46,11 @@ export const handleCaptchaVerify: RequestHandler = async (req, res) => {
     });
 
     if (!response.ok) {
-      console.error("hCaptcha API error:", response.status, response.statusText);
+      console.error(
+        "hCaptcha API error:",
+        response.status,
+        response.statusText,
+      );
       return res.status(500).json({
         success: false,
         error: "Failed to verify captcha",

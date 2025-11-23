@@ -76,9 +76,7 @@ export default function Register() {
 
       const captchaVerification = await verifyCaptchaToken(captchaToken);
       if (!captchaVerification.success) {
-        setError(
-          captchaVerification.error || "Captcha verification failed",
-        );
+        setError(captchaVerification.error || "Captcha verification failed");
         // on force à refaire le captcha
         setCaptchaToken(null);
         hcaptchaRef.current?.resetCaptcha();

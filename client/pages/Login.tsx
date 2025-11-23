@@ -278,9 +278,7 @@ export default function Login() {
                     setError("");
                   }}
                   onError={() => {
-                    setError(
-                      "Captcha verification failed. Please try again.",
-                    );
+                    setError("Captcha verification failed. Please try again.");
                     setCaptchaToken(null);
                   }}
                   onExpire={() => {

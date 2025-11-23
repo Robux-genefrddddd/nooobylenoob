@@ -12,6 +12,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import AdminPanel from "./pages/AdminPanel";
+import AdminLogin from "./pages/AdminLogin";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import LicensePopups from "./components/LicensePopups";
@@ -74,8 +75,11 @@ const AppRoutes = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === "F1") {
         e.preventDefault();
-        if (isAdmin) {
+        const adminAuth = sessionStorage.getItem("admin_authenticated");
+        if (adminAuth === "true") {
           setShowAdminPanel(true);
+        } else {
+          window.location.href = "/admin-login";
         }
       }
     };
@@ -92,20 +96,23 @@ const AppRoutes = () => {
       window.removeEventListener("keydown", handleKeyDown);
       clearInterval(licenseCheckInterval);
     };
-  }, [user, verifyLicense, isAdmin]);
+  }, [user, verifyLicense]);
 
-  if (showAdminPanel && isAdmin) {
-    return (
-      <div>
-        <AdminPanel />
-        <button
-          onClick={() => setShowAdminPanel(false)}
-          className="fixed top-4 right-4 bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded z-[2000]"
-        >
-          Close
-        </button>
-      </div>
-    );
+  if (showAdminPanel) {
+    const adminAuth = sessionStorage.getItem("admin_authenticated");
+    if (adminAuth === "true") {
+      return (
+        <div>
+          <AdminPanel />
+          <button
+            onClick={() => setShowAdminPanel(false)}
+            className="fixed top-4 right-4 bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded z-[2000]"
+          >
+            Close
+          </button>
+        </div>
+      );
+    }
   }
 
   if (maintenanceMode && !showAdminPanel) {
@@ -150,6 +157,7 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/admin-login" element={<AdminLogin />} />
         <Route
           path="/"
           element={

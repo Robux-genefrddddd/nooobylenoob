@@ -118,15 +118,24 @@ export default function BanWarningModal() {
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}
+      className="fixed inset-0 bg-black flex items-center justify-center p-4"
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.95)",
+        zIndex: 9999,
+        pointerEvents: "auto",
+      }}
+      onClick={handleClickOutside}
+      onContextMenu={handleClickOutside}
     >
       <div
         className="w-full max-w-md rounded-lg p-8 border"
         style={{
           backgroundColor: "#0A0A0A",
           borderColor: "#1A1A1A",
+          zIndex: 10000,
+          pointerEvents: "auto",
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Icon and Title */}
         <div className="flex flex-col items-center gap-4 mb-6">

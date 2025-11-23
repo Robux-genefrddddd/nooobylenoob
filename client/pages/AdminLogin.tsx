@@ -17,7 +17,11 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
       const token = await userCredential.user.getIdToken();
 
       sessionStorage.setItem("admin_token", token);
@@ -25,7 +29,9 @@ export default function AdminLogin() {
       navigate("/admin-panel");
     } catch (err) {
       const errorMsg =
-        err instanceof Error ? err.message : "Login failed. Please check your credentials.";
+        err instanceof Error
+          ? err.message
+          : "Login failed. Please check your credentials.";
       setError(errorMsg);
     } finally {
       setIsLoading(false);
@@ -131,9 +137,7 @@ export default function AdminLogin() {
               backgroundColor: email && password ? "#0A84FF" : "#2A2A2A",
               color: "#FFFFFF",
               boxShadow:
-                email && password
-                  ? "0 0 20px rgba(10, 132, 255, 0.4)"
-                  : "none",
+                email && password ? "0 0 20px rgba(10, 132, 255, 0.4)" : "none",
             }}
           >
             {isLoading ? "Authenticating..." : "Sign In"}

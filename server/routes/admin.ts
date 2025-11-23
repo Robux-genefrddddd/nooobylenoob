@@ -317,7 +317,9 @@ export const handleGetMessageHistory: RequestHandler = async (req, res) => {
     }
   } catch (error) {
     console.error("Message history error:", error);
-    return res.status(500).json({ error: "Failed to retrieve message history" });
+    return res
+      .status(500)
+      .json({ error: "Failed to retrieve message history" });
   }
 };
 

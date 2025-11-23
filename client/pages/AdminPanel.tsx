@@ -35,7 +35,12 @@ export default function AdminPanel() {
   });
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "licenses" | "users" | "ai-config" | "maintenance" | "message-history"
+    | "overview"
+    | "licenses"
+    | "users"
+    | "ai-config"
+    | "maintenance"
+    | "message-history"
   >("overview");
 
   // License states
@@ -1063,7 +1068,10 @@ export default function AdminPanel() {
                           key={idx}
                           className="p-4 bg-slate-900 rounded border border-slate-700"
                         >
-                          <p className="text-xs mb-2" style={{ color: "#888888" }}>
+                          <p
+                            className="text-xs mb-2"
+                            style={{ color: "#888888" }}
+                          >
                             {new Date(msg.timestamp).toLocaleString()}
                           </p>
                           <div className="space-y-2">

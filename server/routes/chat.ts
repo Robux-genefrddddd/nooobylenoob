@@ -60,12 +60,16 @@ export const handleChat: RequestHandler = async (req, res) => {
       try {
         errorData = JSON.parse(responseText);
       } catch {
-        console.error("OpenRouter API error - request failed (no message content logged)");
+        console.error(
+          "OpenRouter API error - request failed (no message content logged)",
+        );
         return res.status(response.status).json({
           error: `OpenRouter API error: ${response.statusText}`,
         });
       }
-      console.error("OpenRouter API error - request failed (no message content logged)");
+      console.error(
+        "OpenRouter API error - request failed (no message content logged)",
+      );
       return res.status(response.status).json({
         error:
           errorData.error || `OpenRouter API error: ${response.statusText}`,
@@ -76,7 +80,9 @@ export const handleChat: RequestHandler = async (req, res) => {
     try {
       data = JSON.parse(responseText);
     } catch (parseError) {
-      console.error("Failed to parse OpenRouter API response (no content logged)");
+      console.error(
+        "Failed to parse OpenRouter API response (no content logged)",
+      );
       return res.status(500).json({
         error: "Failed to parse OpenRouter API response",
       });

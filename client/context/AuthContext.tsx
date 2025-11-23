@@ -242,7 +242,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         plan: "Gratuit",
       });
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Registration failed";
+      const errorMsg =
+        err instanceof Error ? err.message : "Registration failed";
 
       if (errorMsg.includes("email-already-in-use")) {
         setError("An account with this email already exists");

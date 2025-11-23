@@ -27,7 +27,7 @@ export const handleChat: RequestHandler = async (req, res) => {
     }
 
     // Get AI config from admin settings
-    const aiConfig = getAIConfig;
+    const aiConfig = getAIConfig_();
     const SYSTEM_PROMPT = aiConfig.systemPrompt;
 
     // Inject system prompt if not already present

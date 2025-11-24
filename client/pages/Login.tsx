@@ -15,6 +15,8 @@ export default function Login() {
   // null = pas encore validé / expiré
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [isCaptchaReady, setIsCaptchaReady] = useState(false);
+  const [captchaFailed, setCaptchaFailed] = useState(false);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
   const hcaptchaRef = useRef<HCaptcha>(null);
 
   const { login } = useAuth();
@@ -275,26 +277,46 @@ export default function Login() {
                   sitekey={getSiteKey()}
                   onVerify={(token) => {
                     setCaptchaToken(token);
+                    setCaptchaVerified(true);
                     setError("");
                   }}
                   onError={() => {
-                    setError("Captcha verification failed. Please try again.");
+                    setCaptchaFailed(true);
+                    setError(
+                      "Captcha failed to load. Please refresh the page.",
+                    );
                     setCaptchaToken(null);
                   }}
                   onExpire={() => {
                     setCaptchaToken(null);
+                    setCaptchaVerified(false);
                     setError(
                       "Le captcha a expiré, veuillez le valider à nouveau.",
                     );
                   }}
                   theme="dark"
                   language="fr"
-                  onLoad={() => setIsCaptchaReady(true)}
+                  onLoad={() => {
+                    setIsCaptchaReady(true);
+                    setCaptchaFailed(false);
+                  }}
                 />
 
-                {!isCaptchaReady && (
+                {!isCaptchaReady && !captchaFailed && (
                   <span className="text-xs" style={{ color: "#AAAAAA" }}>
                     Chargement du captcha…
+                  </span>
+                )}
+
+                {captchaFailed && (
+                  <span className="text-xs" style={{ color: "#EF4444" }}>
+                    Captcha not loaded. Refresh to try again.
+                  </span>
+                )}
+
+                {captchaVerified && (
+                  <span className="text-xs" style={{ color: "#10B981" }}>
+                    ✓ Captcha verified
                   </span>
                 )}
               </div>
@@ -302,7 +324,7 @@ export default function Login() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading || !captchaToken}
+                disabled={isLoading || !captchaToken || captchaFailed}
                 className="w-full py-3 rounded-lg font-semibold transition-all duration-200 text-white mt-6 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   backgroundColor: "#0A84FF",

@@ -1,10 +1,8 @@
-import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { handleChat } from "./routes/chat";
 import { handleSecurityCheck } from "./routes/security";
-import { handleCaptchaVerify } from "./routes/captcha";
 import {
   handleLicenseVerify,
   handleLicenseActivate,
@@ -46,9 +44,6 @@ export function createServer() {
 
   // Security check route
   app.post("/api/security/check", handleSecurityCheck);
-
-  // Captcha verification route
-  app.post("/api/captcha/verify", handleCaptchaVerify);
 
   // License routes
   app.post("/api/license/verify", handleLicenseVerify);

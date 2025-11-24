@@ -36,10 +36,8 @@ function expressPlugin(): Plugin {
     configureServer(server) {
       const app = createServer();
 
-      // Return middleware function to be applied
-      return () => {
-        server.middlewares.use(app);
-      };
+      // Add Express app as the first middleware in the chain
+      server.middlewares.use(app);
     },
   };
 }

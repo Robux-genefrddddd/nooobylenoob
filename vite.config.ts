@@ -30,32 +30,16 @@ export default defineConfig(({ mode }) => ({
 }));
 
 function expressPlugin(): Plugin {
-  let app: any;
-
   return {
     name: "express-plugin",
     apply: "serve",
     configureServer(server) {
-      app = createServer();
+      const app = createServer();
 
-      // Add Express app as middleware BEFORE Vite's default middlewares
-      // This ensures our API routes are handled before Vite tries to serve them as files
+      // Return middleware function to be applied
       return () => {
-        server.middlewares.use((req, res, next) => {
-          // Only let Express handle /api routes and skip Vite's 404 handling
-          if (req.url.startsWith("/api/")) {
-            app(req, res, next);
-          } else {
-            next();
-          }
-        });
+        server.middlewares.use(app);
       };
-    },
-    resolveId(id) {
-      // Make sure we don't try to resolve our API routes as modules
-      if (id.startsWith("/api/")) {
-        return false;
-      }
     },
   };
 }

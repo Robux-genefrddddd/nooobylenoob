@@ -1,8 +1,6 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
-import { getSiteKey, verifyCaptchaToken } from "@/lib/turnstile";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -12,13 +10,6 @@ export default function Register() {
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  // null = pas encore validé / expiré
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [isCaptchaReady, setIsCaptchaReady] = useState(false);
-  const [captchaFailed, setCaptchaFailed] = useState(false);
-  const [captchaVerified, setCaptchaVerified] = useState(false);
-  const hcaptchaRef = useRef<HCaptcha>(null);
 
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -68,37 +59,8 @@ export default function Register() {
       return;
     }
 
-    if (!captchaToken) {
-      setError("Please complete the captcha verification");
-      return;
-    }
-
     try {
       setIsLoading(true);
-
-      try {
-        const captchaVerification = await verifyCaptchaToken(captchaToken);
-        if (!captchaVerification.success) {
-          setError(
-            captchaVerification.error ||
-              "Captcha verification failed. Please try again.",
-          );
-          setCaptchaToken(null);
-          setCaptchaVerified(false);
-          hcaptchaRef.current?.resetCaptcha();
-          return;
-        }
-      } catch (captchaError) {
-        console.error("Captcha verification error:", captchaError);
-        setError(
-          "Unable to verify captcha. Please try again or refresh the page.",
-        );
-        setCaptchaToken(null);
-        setCaptchaVerified(false);
-        hcaptchaRef.current?.resetCaptcha();
-        return;
-      }
-
       await register(formData.name, formData.email, formData.password);
       navigate("/");
     } catch (err) {
@@ -318,66 +280,10 @@ export default function Register() {
                 </div>
               )}
 
-              {/* hCaptcha */}
-              <div
-                className="flex flex-col items-center gap-2"
-                style={{
-                  animation: "fadeInUp 0.6s ease-out 0.55s both",
-                }}
-              >
-                <HCaptcha
-                  ref={hcaptchaRef}
-                  sitekey={getSiteKey()}
-                  onVerify={(token) => {
-                    setCaptchaToken(token);
-                    setCaptchaVerified(true);
-                    setError("");
-                  }}
-                  onError={() => {
-                    setCaptchaFailed(true);
-                    setError(
-                      "Captcha failed to load. Please refresh the page.",
-                    );
-                    setCaptchaToken(null);
-                  }}
-                  onExpire={() => {
-                    setCaptchaToken(null);
-                    setCaptchaVerified(false);
-                    setError(
-                      "Le captcha a expiré, veuillez le valider à nouveau.",
-                    );
-                  }}
-                  theme="dark"
-                  language="fr"
-                  onLoad={() => {
-                    setIsCaptchaReady(true);
-                    setCaptchaFailed(false);
-                  }}
-                />
-
-                {!isCaptchaReady && !captchaFailed && (
-                  <span className="text-xs" style={{ color: "#AAAAAA" }}>
-                    Chargement du captcha…
-                  </span>
-                )}
-
-                {captchaFailed && (
-                  <span className="text-xs" style={{ color: "#EF4444" }}>
-                    Captcha not loaded. Refresh to try again.
-                  </span>
-                )}
-
-                {captchaVerified && (
-                  <span className="text-xs" style={{ color: "#10B981" }}>
-                    ✓ Captcha verified
-                  </span>
-                )}
-              </div>
-
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading || !captchaToken || captchaFailed}
+                disabled={isLoading}
                 className="w-full py-3 rounded-lg font-semibold transition-all duration-200 text-white mt-6 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   backgroundColor: "#0A84FF",
@@ -385,7 +291,7 @@ export default function Register() {
                   animation: "fadeInUp 0.6s ease-out 0.6s both",
                 }}
                 onMouseEnter={(e) => {
-                  if (!isLoading && captchaToken) {
+                  if (!isLoading) {
                     (e.currentTarget as HTMLElement).style.boxShadow =
                       "0 0 30px rgba(10, 132, 255, 0.6)";
                     (e.currentTarget as HTMLElement).style.backgroundColor =
@@ -393,7 +299,7 @@ export default function Register() {
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!isLoading && captchaToken) {
+                  if (!isLoading) {
                     (e.currentTarget as HTMLElement).style.boxShadow =
                       "0 0 20px rgba(10, 132, 255, 0.4)";
                     (e.currentTarget as HTMLElement).style.backgroundColor =

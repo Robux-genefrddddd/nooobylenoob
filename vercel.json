@@ -2,8 +2,6 @@
   "buildCommand": "npm run build:client",
   "outputDirectory": "dist/spa",
   "env": [
-    "HCAPTCHA_SECRET_KEY",
-    "VITE_HCAPTCHA_SITE_KEY",
     "FIREBASE_PROJECT_ID",
     "FIREBASE_PRIVATE_KEY",
     "FIREBASE_CLIENT_EMAIL",

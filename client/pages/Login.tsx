@@ -72,14 +72,26 @@ export default function Login() {
       setIsLoading(true);
 
       // vérification côté backend
-      const captchaVerification = await verifyCaptchaToken(captchaToken);
-      if (!captchaVerification.success) {
+      try {
+        const captchaVerification = await verifyCaptchaToken(captchaToken);
+        if (!captchaVerification.success) {
+          setError(
+            captchaVerification.error ||
+              "Captcha verification failed. Please try again.",
+          );
+          // on force l'utilisateur à refaire le captcha
+          setCaptchaToken(null);
+          setCaptchaVerified(false);
+          hcaptchaRef.current?.resetCaptcha();
+          return;
+        }
+      } catch (captchaError) {
+        console.error("Captcha verification error:", captchaError);
         setError(
-          captchaVerification.error ||
-            "Captcha verification failed. Please try again.",
+          "Unable to verify captcha. Please try again or refresh the page.",
         );
-        // on force l'utilisateur à refaire le captcha
         setCaptchaToken(null);
+        setCaptchaVerified(false);
         hcaptchaRef.current?.resetCaptcha();
         return;
       }

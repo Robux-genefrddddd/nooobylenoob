@@ -1,4 +1,6 @@
 import type { RequestHandler } from "express";
+import https from "https";
+import querystring from "querystring";
 
 interface CaptchaVerifyRequest {
   token: string;
@@ -12,6 +14,52 @@ interface HcaptchaVerifyResponse {
   score_reason?: string[];
   "error-codes"?: string[];
 }
+
+const verifyCaptchaWithHttp = (
+  secret: string,
+  token: string,
+  remoteip?: string,
+): Promise<HcaptchaVerifyResponse> => {
+  return new Promise((resolve, reject) => {
+    const payload: Record<string, string> = { secret, response: token };
+    if (remoteip) {
+      payload.remoteip = remoteip;
+    }
+
+    const data = querystring.stringify(payload);
+
+    const options = {
+      host: "hcaptcha.com",
+      path: "/siteverify",
+      method: "POST" as const,
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+        "content-length": Buffer.byteLength(data),
+      },
+    };
+
+    const request = https.request(options, (response) => {
+      response.setEncoding("utf8");
+      let buffer = "";
+
+      response
+        .on("error", reject)
+        .on("data", (chunk) => (buffer += chunk))
+        .on("end", () => {
+          try {
+            const json = JSON.parse(buffer) as HcaptchaVerifyResponse;
+            resolve(json);
+          } catch (error) {
+            reject(error);
+          }
+        });
+    });
+
+    request.on("error", reject);
+    request.write(data);
+    request.end();
+  });
+};
 
 export const handleCaptchaVerify: RequestHandler = async (req, res) => {
   try {
@@ -33,31 +81,11 @@ export const handleCaptchaVerify: RequestHandler = async (req, res) => {
       });
     }
 
-    const formData = new URLSearchParams();
-    formData.append("secret", secretKey);
-    formData.append("response", token);
-    if (req.ip) {
-      formData.append("remoteip", req.ip);
-    }
-
-    const response = await fetch("https://hcaptcha.com/siteverify", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) {
-      console.error(
-        "hCaptcha API error:",
-        response.status,
-        response.statusText,
-      );
-      return res.status(500).json({
-        success: false,
-        error: "Failed to verify captcha",
-      });
-    }
-
-    const data = (await response.json()) as HcaptchaVerifyResponse;
+    const data = await verifyCaptchaWithHttp(
+      secretKey,
+      token,
+      req.ip || undefined,
+    );
 
     if (!data.success) {
       console.error("hCaptcha verification failed:", data["error-codes"]);

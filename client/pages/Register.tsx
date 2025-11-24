@@ -76,11 +76,25 @@ export default function Register() {
     try {
       setIsLoading(true);
 
-      const captchaVerification = await verifyCaptchaToken(captchaToken);
-      if (!captchaVerification.success) {
-        setError(captchaVerification.error || "Captcha verification failed");
-        // on force à refaire le captcha
+      try {
+        const captchaVerification = await verifyCaptchaToken(captchaToken);
+        if (!captchaVerification.success) {
+          setError(
+            captchaVerification.error ||
+              "Captcha verification failed. Please try again.",
+          );
+          setCaptchaToken(null);
+          setCaptchaVerified(false);
+          hcaptchaRef.current?.resetCaptcha();
+          return;
+        }
+      } catch (captchaError) {
+        console.error("Captcha verification error:", captchaError);
+        setError(
+          "Unable to verify captcha. Please try again or refresh the page.",
+        );
         setCaptchaToken(null);
+        setCaptchaVerified(false);
         hcaptchaRef.current?.resetCaptcha();
         return;
       }

@@ -282,7 +282,9 @@ export default function Login() {
                   }}
                   onError={() => {
                     setCaptchaFailed(true);
-                    setError("Captcha failed to load. Please refresh the page.");
+                    setError(
+                      "Captcha failed to load. Please refresh the page.",
+                    );
                     setCaptchaToken(null);
                   }}
                   onExpire={() => {

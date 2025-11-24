@@ -1,5 +1,6 @@
 import serverless from "serverless-http";
 
-import { createServer } from "../../server";
+// @ts-ignore - Loading compiled ES module
+import { createServer } from "../../dist/server/production.mjs";
 
 export const handler = serverless(createServer());
